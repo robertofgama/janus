@@ -1,0 +1,9 @@
+apiVersion: backstage.io/v1alpha1
+kind: System
+metadata:
+  name: janus
+  description: Command-line tool that creates files from the XDG templates directory in the terminal, yazi and neovim
+  labels:
+    stack:
+spec:
+  owner: darth-gama-software
