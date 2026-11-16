@@ -388,7 +388,7 @@ Plugin Lua em `integrations/nvim/`, sem dependências além do `janus` no `PATH`
 
 ## Cenários de aceite
 
-Os cenários são numerados só para referência dentro deste documento. Quando os requisitos com ID forem derivados ([[technical-debts|DT-07]]), cada cenário vira o critério do requisito correspondente.
+Os cenários são numerados só para referência dentro deste documento. Desde 2026-11-16, cada um é o critério de um requisito com ID, em [[core|núcleo]], [[cli|linha de comando]] e [[tui|modo interativo]] ([[technical-debts|DT-07]], resolvida).
 
 Cada cenário parte de uma pasta de modelos de teste, montada em pasta temporária e apontada por `XDG_TEMPLATES_DIR`, e de uma pasta de destino vazia. A pasta de teste contém:
 
