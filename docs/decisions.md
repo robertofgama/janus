@@ -143,3 +143,15 @@ Decisões do Janus, cada uma com o motivo e as alternativas rejeitadas. As de DE
 - **Decisão:** `janus --version` imprime a versão do módulo principal, lida com `debug.ReadBuildInfo`. Desde o Go 1.24, o `go build` e o `go install` gravam essa versão a partir do git: a tag (`v0.1.0`) ou uma pseudoversão com data e commit, com `+dirty` quando há mudança não registrada. Sem essa informação, imprime `(devel)`.
 - **Por quê:** não há constante de versão para esquecer de atualizar, e a versão aponta o commit exato do binário instalado.
 - **Rejeitadas:** uma constante no código, que envelhece; injetar a versão com `-ldflags`, que exigiria um script de build no lugar do `go install ./cmd/janus` da spec.
+
+### DE-23 — A pasta de destino nunca fica dentro da pasta de modelos
+
+- **Decisão:** a pasta de destino não pode ser a pasta de modelos nem ficar dentro dela. A comparação usa os caminhos reais, com os links resolvidos, porque `~/Modelos` costuma ser um link. `janus new` falha com o código 10, depois do 5, e o modo interativo também, antes de abrir o seletor: a ordem dele passa a ser 2, 3, 4, 5, 9, 10. A mensagem explica que o Janus não escreve na pasta de modelos.
+- **Por quê:** fecha a lacuna de [[technical-debts|DT-13]]: a [[#DE-02 — A pasta XDG de modelos é a fonte única, compartilhada com o Nemo|DE-02]] diz que o Janus nunca escreve na pasta de modelos, mas nada no contrato impedia criar o arquivo lá. No yazi, é fácil acionar o atalho com essa pasta aberta, e o arquivo novo apareceria sem querer como modelo, no menu do Nemo e em `janus list`.
+- **Rejeitadas:** permitir e restringir a DE-02 a "não alterar os modelos existentes", o que deixaria o modelo acidental aparecer; um código de saída novo, porque o 10 já é o da pasta de destino e nenhum adaptador precisa distinguir os casos; perguntar antes de criar, porque `janus new` nunca pergunta.
+
+### DE-24 — O atalho do yazi é c seguido de m
+
+- **Decisão:** o trecho do `keymap.toml` do yazi usa `on = ["c", "m"]` com `run = 'shell "janus --hold" --block'`, em `[[mgr.prepend_keymap]]`.
+- **Por quê:** o autor executou os cinco passos do roteiro manual na yazi 26.9.1 em 2026-11-16, com essa tecla, e aprovou ([[technical-debts|DT-03]]). A leitura é "criar a partir de modelo", e o `prepend_keymap` dá precedência sobre o mapa padrão do yazi, em que `c` abre as ações de copiar caminhos.
+- **Rejeitadas:** manter a tecla como sugestão até a [[roadmap|RM-01.02]], o que deixaria em aberto uma escolha já testada; outra combinação, que ninguém pediu.

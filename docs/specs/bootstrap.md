@@ -27,7 +27,7 @@ O que foi conferido e o que não foi:
 |---|---|
 | Versões e caminhos de [[#Ambiente de referência]] | Lidos na máquina do autor em 2026-11-09 |
 | [[#Inventário dos modelos]] | Lido na máquina do autor em 2026-11-09 |
-| Sintaxe do atalho do yazi (`mgr.prepend_keymap`, `shell --block`) | Conferida na documentação atual do yazi; não executada ([[technical-debts\|DT-03]]) |
+| Sintaxe do atalho do yazi (`mgr.prepend_keymap`, `shell --block`) | Executada pelo autor na yazi 26.9.1 em 2026-11-16, com os cinco passos do roteiro manual ([[technical-debts\|DT-03]], resolvida) |
 | O Nemo não mostra itens ocultos no menu de modelos | Confirmado pelo autor em 2026-11-09 para a pasta oculta `.git`; o manifesto, também oculto, segue a mesma regra ([[technical-debts\|DT-01]], resolvida) |
 | Bibliotecas e opções citadas em [[#Notas para o plano de implementação]] | As escolhidas foram conferidas na documentação em 2026-11-16: `BurntSushi/toml` 1.6.0 ([[decisions#DE-18 — O manifesto é lido com BurntSushi/toml\|DE-18]]) e as opções do `fzf` 0.74 usadas no campo de nome e na prévia ([[decisions#DE-17 — O campo de nome é o próprio fzf\|DE-17]]) |
 | Como a GLib lê o `user-dirs.dirs` | Código de `glib/gutilsprivate.c` lido em 2026-11-16 ([[decisions#DE-20 — O user-dirs.dirs é lido como a GLib lê\|DE-20]]) |
@@ -295,6 +295,7 @@ Campos novos podem ser acrescentados no futuro. Adaptadores devem ignorar campos
 ### `janus new`
 
 - Cria o arquivo em `--dir`, ou na pasta atual quando a opção é omitida. A pasta de destino precisa existir e ser uma pasta; um link simbólico para pasta é aceito.
+- A pasta de destino não pode ser a pasta de modelos nem ficar dentro dela, comparando os caminhos reais, com os links resolvidos. Nesse caso falha com o código 10 ([[decisions#DE-23 — A pasta de destino nunca fica dentro da pasta de modelos|DE-23]]).
 - O identificador é procurado na listagem, nunca juntado à pasta de modelos para formar um caminho. Por isso `../x`, `/etc/hostname`, `.janus.toml`, `.git/config` e `./Empty Bash` dão o código 5, como qualquer identificador que a listagem não traz.
 - Nunca faz perguntas. Modelo `ask` sem `--name` falha com o código 6.
 - Nunca sobrescreve. Se já existe qualquer coisa com o nome final na pasta de destino (arquivo, pasta ou link, mesmo quebrado), falha com o código 8. A criação é exclusiva: se o arquivo surgir entre a checagem e a escrita, o resultado também é o código 8.
@@ -331,20 +332,20 @@ Campos novos podem ser acrescentados no futuro. Adaptadores devem ignorar campos
 | 7 | Nome inválido |
 | 8 | Destino já existe |
 | 9 | Dependência ausente (`fzf`, só no modo interativo) |
-| 10 | Pasta de destino inexistente ou que não é pasta |
+| 10 | Pasta de destino inexistente, que não é pasta ou que fica dentro da pasta de modelos |
 | 130 | Cancelado pelo usuário |
 
 Quando mais de um erro se aplica, vale o primeiro desta ordem de verificação:
 
 - **`list`**: 2, 3, 4, 1.
 - **`new`**: 2, 3, 4, 5, 10, 6, 7, 8, 1.
-- **Modo interativo**: 2, 3, 4, 5, 9, e depois o laço de escolha e nome.
+- **Modo interativo**: 2, 3, 4, 5, 9, 10, e depois o laço de escolha e nome.
 
 Toda falha escreve na saída de erro uma mensagem em português que cita o item envolvido (caminho, identificador, padrão ou nome) e, quando couber, como corrigir. O texto exato das mensagens não faz parte do contrato; os códigos fazem.
 
 ### Yazi: atalho
 
-Em `~/.config/yazi/keymap.toml`. A forma `[[mgr.prepend_keymap]]` com `shell ... --block` foi conferida na documentação atual do yazi, e a versão instalada em 2026-11-09 é a 26.9.1. O trecho abaixo ainda não foi executado ([[technical-debts|DT-03]]).
+Em `~/.config/yazi/keymap.toml`. A forma `[[mgr.prepend_keymap]]` com `shell ... --block` foi conferida na documentação atual do yazi, e a versão instalada em 2026-11-09 é a 26.9.1. O trecho abaixo foi executado pelo autor em 2026-11-16, com os cinco passos do roteiro manual ([[technical-debts|DT-03]], resolvida).
 
 ```toml
 [[mgr.prepend_keymap]]
@@ -354,7 +355,7 @@ desc = "Novo arquivo a partir de modelo"
 ```
 
 - O comando roda na pasta em que o yazi está.
-- `prepend_keymap` dá precedência sobre o mapa de teclas padrão. A tecla `c` seguida de `m` é sugestão; o autor escolhe a definitiva.
+- `prepend_keymap` dá precedência sobre o mapa de teclas padrão. A tecla é `c` seguida de `m` ([[decisions#DE-24 — O atalho do yazi é c seguido de m|DE-24]]).
 - Na máquina do autor, o arquivo deve nascer como um pacote novo em `~/dotfiles/yazi/.config/yazi/keymap.toml`.
 
 ### Neovim: comando `:Janus [pasta]`
@@ -380,6 +381,7 @@ Plugin Lua em `integrations/nvim/`, sem dependências além do `janus` no `PATH`
 | Nome vazio, `.`, `..`, com `/` ou caractere de controle | Avisa e pede de novo | Código 7 |
 | Modelo `ask` sem nome | Pergunta | Código 6 |
 | Pasta de destino inexistente | Não se aplica: usa a pasta atual | Código 10 |
+| Pasta de destino dentro da pasta de modelos | Mensagem e código 10, antes de abrir o seletor | Código 10 |
 | Identificador inexistente | Não se aplica: o seletor só oferece modelos existentes | Código 5 |
 | Pasta sem modelos | Avisa, código 5 | `list` devolve vazio com código 0 |
 | Pasta de modelos ausente | Mensagem e código 3 | Código 3 |
@@ -570,3 +572,4 @@ Documentação consultada: [atalhos e comando `shell` do yazi](https://yazi-rs.g
 - **2026-11-09**: migração para este repositório. Decisões, roadmap e dívidas técnicas passaram para arquivos próprios em `docs/`. Na migração o autor confirmou o local do manifesto ([[technical-debts|DT-01]]), aceitou as convenções de [[decisions#DE-13 — Código Go segue as convenções do Go; o resto, as da casa|DE-13]] e [[decisions#DE-14 — Escopos de commit dentro do vocabulário da casa|DE-14]] e deixou em aberto o remoto do repositório ([[technical-debts|DT-05]]).
 - **2026-11-09**: na escrita do `AGENTS.md`, o glossário ganhou a coluna Inglês e dez termos que a spec já usava, e saiu desta spec para um arquivo próprio, [[glossary]] ([[decisions#DE-15 — O glossário fixa os nomes em inglês; modelo é template|DE-15]]). Com isso, "destino" passou a ser só o arquivo a criar, e duas frases de `janus new` que usavam a palavra para a pasta passaram a dizer "pasta de destino". Sem mudança de comportamento.
 - **2026-11-16**: no planejamento de [[roadmap|RM-01.01]], as escolhas em aberto viraram as decisões de [[decisions#DE-16 — O módulo Go é gitlab.com/rg-dev/janus|DE-16]] a [[decisions#DE-22 — A versão vem do que o Go grava no binário|DE-22]], e o estudo das ferramentas parecidas resolveu [[technical-debts|DT-04]]. Mudanças nesta spec: a leitura do `user-dirs.dirs` ganhou as regras da GLib (DE-20); `janus new` passou a dizer que o identificador é procurado na listagem; as opções podem vir antes ou depois do identificador (DE-19); a estrutura ganhou `internal/messages/` e `internal/failure/` (DE-21) e `internal/testfixture/`. O contrato não mudou: só ficaram definidos casos que a spec deixava em aberto.
+- **2026-11-16**: depois de [[roadmap|RM-01.01]], o autor executou o atalho do yazi ([[technical-debts|DT-03]], resolvida) e fixou a tecla em [[decisions#DE-24 — O atalho do yazi é c seguido de m|DE-24]]. Mudança de contrato em [[decisions#DE-23 — A pasta de destino nunca fica dentro da pasta de modelos|DE-23]]: a pasta de destino dentro da pasta de modelos passa a dar o código 10, em `janus new` e no modo interativo, que ganha o 10 na ordem de verificação. A implementação fica para [[roadmap|RM-01.02]] ([[technical-debts|DT-13]]).
