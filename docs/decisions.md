@@ -117,7 +117,7 @@ Decisões do Janus, cada uma com o motivo e as alternativas rejeitadas. As de DE
 ### DE-18 — O manifesto é lido com BurntSushi/toml
 
 - **Decisão:** o `.janus.toml` é lido com `github.com/BurntSushi/toml`, versão 1.6.0. É a única dependência externa do projeto.
-- **Por quê:** `MetaData.Undecoded()` lista as chaves que não couberam na estrutura esperada, o que dá a validação estrita da spec, e o erro de sintaxe (`ParseError`) traz linha e coluna para a mensagem. Conferido na documentação da versão 1.6.0 em 2026-11-16.
+- **Por quê:** `MetaData.Keys()` devolve as chaves na ordem do arquivo, o que permite conferir cada uma e citar sempre a primeira errada, e o erro de sintaxe (`ParseError`), inclusive o de chave repetida, traz a linha para a mensagem. O manifesto é lido como tabela genérica e conferido chave a chave, porque o erro de tipo da biblioteca não diz a chave de forma estruturada; a primeira ideia, `MetaData.Undecoded()` com uma struct, esbarrava nisso. Conferido no código da versão 1.6.0 em 2026-11-16.
 - **Rejeitadas:** `github.com/pelletier/go-toml/v2`, que também tem modo estrito; a vantagem dela é a velocidade, irrelevante para um arquivo de poucas linhas.
 
 ### DE-19 — Os argumentos são lidos por código próprio, sem o pacote flag
@@ -134,7 +134,7 @@ Decisões do Janus, cada uma com o motivo e as alternativas rejeitadas. As de DE
 
 ### DE-21 — As mensagens moram em internal/messages
 
-- **Decisão:** todo texto mostrado ao usuário fica no pacote `internal/messages`, que também transforma cada erro tipado do núcleo em mensagem. O `cli` transforma o erro em código de saída, e o `interactive` usa o mesmo pacote para os avisos do laço de escolha e nome.
+- **Decisão:** todo texto mostrado ao usuário fica no pacote `internal/messages`, que também transforma cada erro tipado em mensagem. O `cli` transforma o erro em código de saída, e o `interactive` usa o mesmo pacote para os avisos do laço de escolha e nome. Os erros que não vêm do núcleo (uso incorreto, programa ausente, pasta sem modelos no modo interativo, falha do `fzf` e cancelamento) moram em `internal/failure`, que `messages` e `cli` importam sem importar um ao outro.
 - **Por quê:** a estrutura proposta em [[bootstrap]] punha as mensagens em `internal/cli`, mas o modo interativo também mostra avisos, e o `cli` importa o `interactive`. Com as mensagens no `cli`, os dois pacotes se importariam, o que o Go proíbe. Um pacote próprio mantém o lugar único de [[#DE-11 — Contrato em inglês, mensagens em português|DE-11]].
 - **Rejeitadas:** o `cli` passar ao `interactive` uma função que formata mensagens, o que espalharia a montagem dos avisos por dois pacotes; mensagens em cada pacote de código, o que quebraria DE-11.
 
