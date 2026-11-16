@@ -8,7 +8,7 @@ tags:
 
 # Decisões
 
-Decisões do Janus, cada uma com o motivo e as alternativas rejeitadas. As de DE-01 a DE-12 foram tomadas na sessão de desenho de 2026-11-09; DE-13 e DE-14, na migração para este repositório, e DE-15, na escrita do `AGENTS.md`, no mesmo dia. O desenho completo está em [[bootstrap]].
+Decisões do Janus, cada uma com o motivo e as alternativas rejeitadas. As de DE-01 a DE-12 foram tomadas na sessão de desenho de 2026-11-09; DE-13 e DE-14, na migração para este repositório, e DE-15, na escrita do `AGENTS.md`, no mesmo dia. As de DE-16 a DE-22 saíram do planejamento de [[roadmap|RM-01.01]], em 2026-11-16. O desenho completo está em [[bootstrap]].
 
 ## Registro
 
@@ -101,3 +101,45 @@ Decisões do Janus, cada uma com o motivo e as alternativas rejeitadas. As de DE
 - **Decisão:** o [[glossary|glossário]] do projeto, num arquivo próprio, tem uma coluna Inglês com o nome de cada termo do domínio, e o código, o JSON e os commits usam esse nome. Modelo é *template*. Campo de nome é *name prompt*. Integração (*integration*) e adaptador (*adapter*) são termos distintos: a integração é o conjunto em `integrations/<programa>/`, com as instruções de instalação, e o adaptador é o código que ela contém.
 - **Por quê:** o padrão da casa pede um glossário PT → EN em `docs/`, e sem ele o mesmo conceito ganha nomes diferentes: a descrição do `catalog-info.yaml` chamava os modelos de *models*. O glossário tem arquivo próprio porque vale para o projeto inteiro, e não só para [[bootstrap]]. *Template* é o nome que o padrão XDG dá à pasta (`XDG_TEMPLATES_DIR`). *Prompt* é o termo comum em programas de terminal para pedir um texto ao usuário. A spec e o roadmap já usavam "integração" para o conjunto e "adaptador" para o código.
 - **Rejeitadas:** *model*, que em inglês sugere modelo de dados ou de IA; um termo só, *adapter*, com a pasta renomeada para `adapters/`, o que obrigaria a reescrever a spec e o roadmap, onde "integração" já nomeia o conjunto; *name field*, a tradução literal, e *name input*, que nomeiam um elemento de formulário, e não o ato de pedir o nome; o glossário como seção de [[bootstrap]], onde nasceu, que prenderia à spec de partida um documento que os requisitos, os planos e o código também consultam.
+
+### DE-16 — O módulo Go é gitlab.com/rg-dev/janus
+
+- **Decisão:** o caminho do módulo é `gitlab.com/rg-dev/janus`, igual ao remoto `origin` (`git@gitlab.com:rg-dev/janus.git`). Trocar o remoto exige trocar o módulo no mesmo commit.
+- **Por quê:** a proposta tinha sido descartada na migração ([[technical-debts|DT-05]]), mas em 2026-11-16 o remoto já estava configurado com esse endereço e com a `main` enviada. Com o caminho igual ao remoto, `go install gitlab.com/rg-dev/janus/cmd/janus@latest` funciona quando o repositório for publicado; enquanto for privado, isso pede `GOPRIVATE=gitlab.com/rg-dev/*` e acesso ao git por SSH, porque o proxy público do Go não enxerga repositório privado. Trocar depois custa pouco: `go mod edit -module` e a troca dos imports internos, num commit mecânico. Todo o código fica em `internal/`, que nenhum outro módulo pode importar, e os adaptadores chamam o binário, não o módulo.
+- **Rejeitadas:** só `janus`, sem domínio, que impede instalar a partir do remoto e teria de mudar numa publicação; um caminho no domínio da casa, servido por uma página que redireciona ao repositório, que desliga o módulo do remoto mas exige domínio e hospedagem.
+
+### DE-17 — O campo de nome é o próprio fzf
+
+- **Decisão:** o campo de nome do modo interativo é o `fzf` com a lista vazia: `--query` traz o valor inicial, `--print-query` devolve o texto digitado, o cabeçalho mostra o aviso (destino existente, nome inválido) e `Ctrl-D` cancela sempre (`--bind ctrl-d:abort`). Fica atrás da interface do campo de nome, como o seletor fica atrás da dele.
+- **Por quê:** o `fzf` já é obrigatório no modo interativo, então nenhuma dependência entra, e o campo tem a mesma aparência do seletor. Na configuração padrão do `fzf`, `Ctrl-D` só cancela com o campo vazio; a spec pede que cancele sempre. O custo aceito é usar o `fzf` para o que ele não foi feito: sobra uma área de lista vazia, reduzida com `--height`.
+- **Rejeitadas:** uma biblioteca Go de edição de linha com texto inicial, que a spec autorizava, mas traria uma dependência e um visual diferente do seletor; um editor de linha próprio com o terminal em modo cru, que pediria `golang.org/x/term` e código nosso para cursor, acentos e largura de caracteres.
+
+### DE-18 — O manifesto é lido com BurntSushi/toml
+
+- **Decisão:** o `.janus.toml` é lido com `github.com/BurntSushi/toml`, versão 1.6.0. É a única dependência externa do projeto.
+- **Por quê:** `MetaData.Undecoded()` lista as chaves que não couberam na estrutura esperada, o que dá a validação estrita da spec, e o erro de sintaxe (`ParseError`) traz linha e coluna para a mensagem. Conferido na documentação da versão 1.6.0 em 2026-11-16.
+- **Rejeitadas:** `github.com/pelletier/go-toml/v2`, que também tem modo estrito; a vantagem dela é a velocidade, irrelevante para um arquivo de poucas linhas.
+
+### DE-19 — Os argumentos são lidos por código próprio, sem o pacote flag
+
+- **Decisão:** a linha de comando é lida por um leitor próprio e pequeno, em `internal/cli`. Ele aceita `--opcao valor`, `--opcao=valor` e `--`, com as opções antes ou depois do identificador.
+- **Por quê:** o pacote `flag` para de ler opções no primeiro argumento que não é opção, e o contrato põe as opções depois do identificador (`janus new <id> --dir x`). Ele também aceita `-dir` com um hífen só e trata `-h`, formas que o contrato considera uso incorreto, e escreve as próprias mensagens em inglês.
+- **Rejeitadas:** o `flag` com várias leituras seguidas, uma a cada argumento que não é opção, que perde o efeito do `--`; bibliotecas como a `cobra`, uma dependência grande demais para dois subcomandos, que a stack só aceitaria com um DE.
+
+### DE-20 — O user-dirs.dirs é lido como a GLib lê
+
+- **Decisão:** a linha de `XDG_TEMPLATES_DIR` no `user-dirs.dirs` é interpretada como na função `load_user_special_dirs_from_string` da GLib. Espaços e tabulações são aceitos no início da linha e em volta do `=`. Vale a última linha que define a variável. O valor vai da primeira aspa até a última aspa da linha, sem desfazer escapes. Ele começa por `/` ou por `$HOME` seguido de `/` ou da aspa final. Barras no fim são removidas. `"$HOME"` sozinho é a pasta pessoal e, como a spec manda, falha com o código 3.
+- **Por quê:** o Nemo obtém a pasta pela GLib (`g_get_user_special_dir`), e o Janus deve achar a mesma pasta que ele. A spec não definia esses casos. O código foi lido em `glib/gutilsprivate.c` em 2026-11-16. Uma diferença é assumida: a GLib ignora uma linha com valor relativo e fica com a anterior; o Janus falha com o código 3, como a spec já pedia, para que o erro apareça.
+- **Rejeitadas:** ler o arquivo como o shell lê (o `xdg-user-dir` faz `source` dele), desfazendo `\"` e `\$`, como sugeriu o [[similar-tools|estudo das ferramentas parecidas]], o que divergiria do Nemo justamente nesses casos; aceitar só a forma exata que a spec descrevia, o que recusaria um arquivo que o Nemo aceita.
+
+### DE-21 — As mensagens moram em internal/messages
+
+- **Decisão:** todo texto mostrado ao usuário fica no pacote `internal/messages`, que também transforma cada erro tipado do núcleo em mensagem. O `cli` transforma o erro em código de saída, e o `interactive` usa o mesmo pacote para os avisos do laço de escolha e nome.
+- **Por quê:** a estrutura proposta em [[bootstrap]] punha as mensagens em `internal/cli`, mas o modo interativo também mostra avisos, e o `cli` importa o `interactive`. Com as mensagens no `cli`, os dois pacotes se importariam, o que o Go proíbe. Um pacote próprio mantém o lugar único de [[#DE-11 — Contrato em inglês, mensagens em português|DE-11]].
+- **Rejeitadas:** o `cli` passar ao `interactive` uma função que formata mensagens, o que espalharia a montagem dos avisos por dois pacotes; mensagens em cada pacote de código, o que quebraria DE-11.
+
+### DE-22 — A versão vem do que o Go grava no binário
+
+- **Decisão:** `janus --version` imprime a versão do módulo principal, lida com `debug.ReadBuildInfo`. Desde o Go 1.24, o `go build` e o `go install` gravam essa versão a partir do git: a tag (`v0.1.0`) ou uma pseudoversão com data e commit, com `+dirty` quando há mudança não registrada. Sem essa informação, imprime `(devel)`.
+- **Por quê:** não há constante de versão para esquecer de atualizar, e a versão aponta o commit exato do binário instalado.
+- **Rejeitadas:** uma constante no código, que envelhece; injetar a versão com `-ldflags`, que exigiria um script de build no lugar do `go install ./cmd/janus` da spec.

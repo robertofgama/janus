@@ -25,17 +25,17 @@ Só o núcleo conhece os modelos.
 ### Contrato
 
 - Mudar a linha de comando (`janus [--hold]`, `list`, `new`, opções, saídas e JSON), o formato do manifesto ou os códigos de saída é decisão: registre um DE e atualize a spec. Os adaptadores dependem disso.
-- Subcomandos, opções e chaves do JSON e do manifesto são em inglês. Mensagens ao usuário, inclusive a ajuda, são em português do Brasil e ficam concentradas num único lugar do código (DE-11).
+- Subcomandos, opções e chaves do JSON e do manifesto são em inglês. Mensagens ao usuário, inclusive a ajuda, são em português do Brasil e ficam concentradas no pacote `internal/messages` (DE-11, DE-21).
 - O texto das mensagens não é contrato. Os testes conferem o código de saída e o item que a mensagem cita, não a frase.
 - A saída padrão leva só o resultado (lista, JSON, caminho criado, ajuda, versão). Avisos, erros e a interface interativa vão para a saída de erro e o terminal; é isso que permite `nvim (janus)` no fish.
 
 ## Stack
 
 - Go 1.27 no mínimo.
-- Biblioteca padrão primeiro. Dependência externa só para ler TOML e para editar uma linha com valor inicial; qualquer outra precisa de um DE antes de entrar.
+- Biblioteca padrão primeiro. A única dependência externa é `github.com/BurntSushi/toml`, para ler o manifesto (DE-18); qualquer outra precisa de um DE antes de entrar. O campo de nome é o próprio `fzf`, sem biblioteca de edição de linha (DE-17).
 - `fzf` é obrigatório só no modo interativo, e `bat` é opcional, para realçar a prévia. `list` e `new` não dependem de nenhum dos dois.
 - O plugin do neovim é em Lua, compatível com o neovim 0.10 (por causa de `vim.system`) e sem dependência além do `janus` no `PATH`.
-- O caminho do módulo Go e o remoto são definidos pelo autor (DT-05): não crie `go.mod` nem remoto com caminho inventado.
+- O módulo Go é `gitlab.com/rg-dev/janus`, igual ao remoto `origin` (DE-16). Trocar um exige trocar o outro no mesmo commit.
 
 ## Código
 

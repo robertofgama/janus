@@ -14,7 +14,7 @@ Para onde o Janus vai, em entregas. O que cada entrega precisa fazer está espec
 
 ### RM-01 — MVP
 
-- **RM-01.01** ⬜ — **Núcleo e terminal.** Descoberta da pasta, listagem, manifesto, resolução de nome, `list`, `new`, modo interativo com `fzf`, prévia, campo de nome, `--hold`, códigos de saída e os testes automatizados. (registrada em 2026-11-09)
+- **RM-01.01** 🔄 — **Núcleo e terminal.** Descoberta da pasta, listagem, manifesto, resolução de nome, `list`, `new`, modo interativo com `fzf`, prévia, campo de nome, `--hold`, códigos de saída e os testes automatizados. (registrada em 2026-11-09)
   - *Por que aqui:* resolve sozinha a dor original e é a base de todas as outras entregas.
 - **RM-01.02** ⬜ — **Integração com o yazi.** Trecho de `keymap.toml`, instruções de instalação e o roteiro manual executado. (registrada em 2026-11-09)
   - *Por que aqui:* custa poucas linhas e prova o nível trivial de integração.

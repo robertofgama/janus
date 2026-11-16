@@ -29,7 +29,8 @@ O que foi conferido e o que não foi:
 | [[#Inventário dos modelos]] | Lido na máquina do autor em 2026-11-09 |
 | Sintaxe do atalho do yazi (`mgr.prepend_keymap`, `shell --block`) | Conferida na documentação atual do yazi; não executada ([[technical-debts\|DT-03]]) |
 | O Nemo não mostra itens ocultos no menu de modelos | Confirmado pelo autor em 2026-11-09 para a pasta oculta `.git`; o manifesto, também oculto, segue a mesma regra ([[technical-debts\|DT-01]], resolvida) |
-| Bibliotecas e opções citadas em [[#Notas para o plano de implementação]] | Candidatas, a conferir na documentação atual |
+| Bibliotecas e opções citadas em [[#Notas para o plano de implementação]] | As escolhidas foram conferidas na documentação em 2026-11-16: `BurntSushi/toml` 1.6.0 ([[decisions#DE-18 — O manifesto é lido com BurntSushi/toml\|DE-18]]) e as opções do `fzf` 0.74 usadas no campo de nome e na prévia ([[decisions#DE-17 — O campo de nome é o próprio fzf\|DE-17]]) |
+| Como a GLib lê o `user-dirs.dirs` | Código de `glib/gutilsprivate.c` lido em 2026-11-16 ([[decisions#DE-20 — O user-dirs.dirs é lido como a GLib lê\|DE-20]]) |
 
 ## Problema
 
@@ -52,7 +53,7 @@ Um núcleo único em linha de comando que conhece a pasta de modelos e as regras
 | **Dono** | Darth Gama Software (`owner: darth-gama-software` em `catalog-info.yaml`) |
 | **Autor** | Roberto Gama |
 | **Repositório local** | `~/Projetos/dev/janus/janus`, o worktree da branch `main`. Criado em 2026-11-09. |
-| **Remoto e módulo Go** | Ainda não definidos ([[technical-debts\|DT-05]]). |
+| **Remoto e módulo Go** | Remoto `git@gitlab.com:rg-dev/janus.git`; módulo `gitlab.com/rg-dev/janus`. Trocar um exige trocar o outro no mesmo commit ([[decisions#DE-16 — O módulo Go é gitlab.com/rg-dev/janus\|DE-16]]). |
 | **Plataforma** | Linux. Nenhuma outra é alvo. |
 | **Licença** | Nenhuma enquanto o repositório for privado. Entra em pauta só se houver publicação. |
 
@@ -73,7 +74,7 @@ Os padrões da casa não têm referência para Go. As convenções de nome adota
 
 - **Linguagem**: Go. A versão mínima é a instalada na máquina do autor, 1.27.
 - **Artefato**: um único binário, `janus`.
-- **Dependências**: biblioteca padrão primeiro. Dependências externas são aceitas para duas necessidades que a biblioteca padrão não cobre: ler TOML e editar uma linha de texto com valor inicial. Qualquer outra pede uma decisão registrada.
+- **Dependências**: biblioteca padrão primeiro. Dependências externas eram aceitas para duas necessidades que a biblioteca padrão não cobre: ler TOML e editar uma linha de texto com valor inicial. A primeira é `github.com/BurntSushi/toml` ([[decisions#DE-18 — O manifesto é lido com BurntSushi/toml|DE-18]]); a segunda não precisou de dependência, porque o campo de nome é o próprio `fzf` ([[decisions#DE-17 — O campo de nome é o próprio fzf|DE-17]]). Qualquer outra pede uma decisão registrada.
 - **Programas externos em tempo de execução**: `fzf`, obrigatório só no modo interativo; `bat`, opcional, usado na prévia quando existir.
 
 ### Estrutura proposta do repositório
@@ -83,8 +84,10 @@ janus/
 ├── cmd/janus/            ← ponto de entrada do binário
 ├── internal/
 │   ├── core/             ← descoberta, listagem, manifesto, nome final, cópia
-│   ├── cli/              ← subcomandos, JSON, códigos de saída, mensagens
-│   └── interactive/      ← modo interativo: seletor, campo de nome, prévia
+│   ├── messages/         ← todo texto ao usuário, e o texto de cada erro tipado
+│   ├── cli/              ← argumentos, subcomandos, JSON, códigos de saída
+│   ├── interactive/      ← modo interativo: seletor, campo de nome, prévia
+│   └── testfixture/      ← a pasta de modelos de teste, usada pelos testes dos outros pacotes
 ├── integrations/
 │   ├── nvim/             ← plugin Lua: plugin/janus.lua e lua/janus/init.lua
 │   └── yazi/             ← trecho de keymap.toml e instruções
@@ -116,7 +119,7 @@ graph LR
 ### Componentes
 
 1. **Núcleo**: descobre a pasta, lista os modelos, lê o manifesto, resolve o nome final e copia. Não imprime nada, não lê do teclado e não conhece códigos de saída: devolve valores e erros tipados.
-2. **Linha de comando**: os subcomandos `list` e `new`, a saída em JSON, a tradução de erros em mensagens e códigos de saída. É o contrato estável.
+2. **Linha de comando**: os subcomandos `list` e `new`, a saída em JSON, a tradução de erros em códigos de saída. É o contrato estável. O texto das mensagens vem de um pacote próprio, compartilhado com o modo interativo ([[decisions#DE-21 — As mensagens moram em internal/messages|DE-21]]).
 3. **Modo interativo**: o frontend de terminal. Chama as funções do núcleo diretamente, dentro do mesmo processo; não executa o próprio binário como subprocesso. O seletor e o campo de nome ficam cada um atrás de uma interface, para serem substituídos nos testes.
 4. **Integrações**: o plugin do neovim e o trecho de configuração do yazi, cada um em sua pasta, com instruções de instalação.
 
@@ -157,19 +160,24 @@ O arquivo nasce no diretório de trabalho do neovim (`:pwd`). Para criar ao lado
 | `janus list [--json]` | Lista os modelos |
 | `janus new <id> [--dir <pasta>] [--name <nome>]` | Cria um arquivo a partir de um modelo |
 | `janus --help`, `janus <subcomando> --help` | Imprime a ajuda na saída padrão, código 0 |
-| `janus --version` | Imprime a versão na saída padrão, código 0 |
+| `janus --version` | Imprime a versão na saída padrão, código 0 ([[decisions#DE-22 — A versão vem do que o Go grava no binário\|DE-22]]) |
 
-- Opções aceitam `--opcao valor` e `--opcao=valor`. `--` encerra as opções, para identificadores que comecem com `-`.
+- Opções aceitam `--opcao valor` e `--opcao=valor`, antes ou depois do identificador. `--` encerra as opções, para identificadores que comecem com `-`. A leitura é feita por código próprio ([[decisions#DE-19 — Os argumentos são lidos por código próprio, sem o pacote flag|DE-19]]).
 - Qualquer outro argumento, subcomando ou opção é uso incorreto (código 2).
 - Existe um subcomando interno para a prévia ([[decisions#DE-12 — A prévia é produzida pelo próprio binário|DE-12]]). Ele não aparece na ajuda, não faz parte do contrato e pode mudar sem aviso.
 
 ### Descoberta da pasta de modelos
 
 1. Se a variável de ambiente `XDG_TEMPLATES_DIR` está definida e não é vazia, ela é a pasta. Não há segunda tentativa: se o valor não for uma pasta existente, o comando falha.
-2. Senão, lê-se a linha `XDG_TEMPLATES_DIR="..."` do arquivo `$XDG_CONFIG_HOME/user-dirs.dirs`, ou `~/.config/user-dirs.dirs` quando `XDG_CONFIG_HOME` não está definida. O valor vem entre aspas duplas e é ou um caminho absoluto ou um caminho iniciado por `$HOME/`, que é expandido. Nenhuma outra variável é expandida.
+2. Senão, lê-se a linha `XDG_TEMPLATES_DIR="..."` do arquivo `$XDG_CONFIG_HOME/user-dirs.dirs`, ou `~/.config/user-dirs.dirs` quando `XDG_CONFIG_HOME` não está definida. O valor vem entre aspas duplas e é ou um caminho absoluto ou um caminho iniciado por `$HOME/`, que é expandido. Nenhuma outra variável é expandida. Os detalhes seguem a GLib, que é quem dá a pasta ao Nemo ([[decisions#DE-20 — O user-dirs.dirs é lido como a GLib lê|DE-20]]):
+   - espaços e tabulações são aceitos no início da linha e em volta do `=`;
+   - se a variável aparece em mais de uma linha, vale a última;
+   - o valor vai da primeira aspa até a última aspa da linha, e escapes como `\"` não são desfeitos;
+   - `"$HOME"` sozinho também é aceito, e é a pasta pessoal;
+   - barras no fim do caminho são removidas.
 3. Em todos estes casos o comando falha com o código 3 e uma mensagem que diz o que foi tentado:
    - o arquivo ou a linha não existem;
-   - o valor é um caminho relativo;
+   - o valor é um caminho relativo, o que inclui `$HOME` seguido de qualquer coisa que não seja `/`;
    - o caminho não existe ou não é uma pasta;
    - o caminho é a própria pasta pessoal do usuário, que no padrão XDG significa "pasta de modelos desativada".
 
@@ -286,6 +294,7 @@ Campos novos podem ser acrescentados no futuro. Adaptadores devem ignorar campos
 ### `janus new`
 
 - Cria o arquivo em `--dir`, ou na pasta atual quando a opção é omitida. A pasta de destino precisa existir e ser uma pasta; um link simbólico para pasta é aceito.
+- O identificador é procurado na listagem, nunca juntado à pasta de modelos para formar um caminho. Por isso `../x`, `/etc/hostname`, `.janus.toml`, `.git/config` e `./Empty Bash` dão o código 5, como qualquer identificador que a listagem não traz.
 - Nunca faz perguntas. Modelo `ask` sem `--name` falha com o código 6.
 - Nunca sobrescreve. Se já existe qualquer coisa com o nome final na pasta de destino (arquivo, pasta ou link, mesmo quebrado), falha com o código 8. A criação é exclusiva: se o arquivo surgir entre a checagem e a escrita, o resultado também é o código 8.
 - O conteúdo é copiado byte a byte. Os bits de permissão do modelo são aplicados exatamente ao arquivo novo, sem influência da `umask`. Datas não são preservadas.
@@ -530,12 +539,12 @@ O que este inventário exige da implementação e dos testes:
 
 ## Notas para o plano de implementação
 
-Nada aqui é decisão. São pontos de partida, e toda API citada precisa ser conferida na documentação atual antes de entrar no plano.
+Pontos de partida escritos antes do planejamento. Os que viraram decisão em 2026-11-16 apontam para ela; os demais ainda precisam ser conferidos na documentação atual.
 
 - **Requisitos com ID**: ainda não existem. Derivar `FR` e `NFR` de [[#Contratos e formatos]] e de [[#Cenários de aceite]] é a primeira tarefa do plano ([[technical-debts|DT-07]]). Módulos sugeridos: `CORE` (núcleo), `CLI` (linha de comando), `TUI` (modo interativo), `NVIM` e `YAZI`.
-- **TOML**: candidatas `github.com/BurntSushi/toml` e `github.com/pelletier/go-toml/v2`. A validação estrita do manifesto pede acesso às chaves não reconhecidas.
-- **Campo de nome com valor inicial**: duas saídas a avaliar. Uma biblioteca de edição de linha que aceite texto inicial, ou o próprio `fzf` com lista vazia, `--query` como valor inicial e `--print-query` para devolver o texto, o que dispensaria a dependência.
-- **Argumentos**: o pacote `flag` da biblioteca padrão deve bastar para dois subcomandos.
+- **TOML**: decidido, `github.com/BurntSushi/toml` ([[decisions#DE-18 — O manifesto é lido com BurntSushi/toml|DE-18]]).
+- **Campo de nome com valor inicial**: decidido, o próprio `fzf` ([[decisions#DE-17 — O campo de nome é o próprio fzf|DE-17]]).
+- **Argumentos**: a nota original apostava no pacote `flag`, mas ele para de ler opções no primeiro argumento que não é opção. Decidido um leitor próprio ([[decisions#DE-19 — Os argumentos são lidos por código próprio, sem o pacote flag|DE-19]]).
 - **Seletor**: o `fzf` recebe os identificadores pela entrada padrão e chama o subcomando interno de prévia com o identificador escolhido. Conferir as opções de prévia e de rótulo e os códigos de saída do `fzf` (o desenho assume 0 para escolha, 1 para nenhum resultado, 130 para cancelamento).
 - **Padrões do manifesto**: `path.Match` da biblioteca padrão interpreta `?`, `[` e `\`, que aqui são literais. O casamento precisa ser próprio.
 - **Criação exclusiva**: abrir o destino com criação exclusiva e aplicar as permissões depois, para não depender da `umask`.
@@ -543,7 +552,7 @@ Nada aqui é decisão. São pontos de partida, e toda API citada precisa ser con
 
 ## Referências
 
-Ferramentas parecidas, encontradas em uma busca rápida e ainda não estudadas ([[technical-debts|DT-04]]). Nenhuma apareceu cobrindo terminal, yazi e neovim com as mesmas regras, nem com regra de nome fixo.
+Ferramentas parecidas, encontradas em uma busca rápida. Nenhuma cobre terminal, yazi e neovim com as mesmas regras, nem tem regra de nome fixo, e todas sobrescrevem o destino sem avisar. O estudo, de 2026-11-16, está em [[similar-tools]] ([[technical-debts|DT-04]], resolvida).
 
 - [touchtemplate](https://lib.rs/crates/touchtemplate): `tt <modelo> <nome>`, lê a pasta XDG de modelos.
 - [NeFT](https://github.com/tunalad/neft-py): "new from template", com interface de terminal.
@@ -559,3 +568,4 @@ Documentação consultada: [atalhos e comando `shell` do yazi](https://yazi-rs.g
 - **2026-11-09**: revisão para servir de ponto de partida único. Uma leitura independente, feita sem acesso à conversa, apontou lacunas e ambiguidades, todas tratadas. Mudanças de contrato em relação ao primeiro rascunho: a tabela do manifesto passou de `[nomes]` para `[names]` ([[decisions#DE-11 — Contrato em inglês, mensagens em português|DE-11]]); o campo `extension` saiu do JSON; entraram o código de saída 10, a opção `--hold` e o subcomando interno de prévia ([[decisions#DE-12 — A prévia é produzida pelo próprio binário|DE-12]]).
 - **2026-11-09**: migração para este repositório. Decisões, roadmap e dívidas técnicas passaram para arquivos próprios em `docs/`. Na migração o autor confirmou o local do manifesto ([[technical-debts|DT-01]]), aceitou as convenções de [[decisions#DE-13 — Código Go segue as convenções do Go; o resto, as da casa|DE-13]] e [[decisions#DE-14 — Escopos de commit dentro do vocabulário da casa|DE-14]] e deixou em aberto o remoto do repositório ([[technical-debts|DT-05]]).
 - **2026-11-09**: na escrita do `AGENTS.md`, o glossário ganhou a coluna Inglês e dez termos que a spec já usava, e saiu desta spec para um arquivo próprio, [[glossary]] ([[decisions#DE-15 — O glossário fixa os nomes em inglês; modelo é template|DE-15]]). Com isso, "destino" passou a ser só o arquivo a criar, e duas frases de `janus new` que usavam a palavra para a pasta passaram a dizer "pasta de destino". Sem mudança de comportamento.
+- **2026-11-16**: no planejamento de [[roadmap|RM-01.01]], as escolhas em aberto viraram as decisões de [[decisions#DE-16 — O módulo Go é gitlab.com/rg-dev/janus|DE-16]] a [[decisions#DE-22 — A versão vem do que o Go grava no binário|DE-22]], e o estudo das ferramentas parecidas resolveu [[technical-debts|DT-04]]. Mudanças nesta spec: a leitura do `user-dirs.dirs` ganhou as regras da GLib (DE-20); `janus new` passou a dizer que o identificador é procurado na listagem; as opções podem vir antes ou depois do identificador (DE-19); a estrutura ganhou `internal/messages/` (DE-21) e `internal/testfixture/`. O contrato não mudou: só ficaram definidos casos que a spec deixava em aberto.
