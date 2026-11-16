@@ -8,7 +8,7 @@ Ferramenta de linha de comando que leva o "Criar novo documento" do gerenciador 
 
 ## Estado
 
-Em especificação. Ainda não há código.
+Núcleo e terminal prontos ([RM-01.01](docs/roadmap.md)). As integrações com o yazi e o neovim são as próximas entregas.
 
 ## Documentação
 
@@ -18,13 +18,42 @@ Em especificação. Ainda não há código.
 - [Roadmap](docs/roadmap.md): as entregas, na ordem.
 - [Dívidas técnicas](docs/technical-debts.md): o que ficou para depois.
 
-## Uso previsto
+## Instalação
 
 ```
-janus                          # escolhe um modelo e cria o arquivo na pasta atual
-janus list --json              # lista os modelos, para outros programas
-janus new <id> --name <nome>   # cria sem interação
+go install ./cmd/janus
 ```
+
+O binário vai para `~/go/bin`. Em tempo de execução, o modo interativo precisa do `fzf`; o `bat`, se existir, realça a prévia. `list` e `new` não dependem de nenhum dos dois.
+
+## Uso
+
+```
+janus                          # escolhe um modelo com o fzf e cria o arquivo na pasta atual
+janus list                     # lista os modelos, um por linha
+janus list --json              # lista os modelos em JSON, para outros programas
+janus new <id> --name <nome>   # cria sem perguntar nada
+janus --help                   # ajuda, com os códigos de saída
+```
+
+O modo interativo imprime só o caminho criado na saída padrão, então `nvim (janus)` funciona no fish.
+
+## Nomes fixos
+
+Sem configuração, todo modelo pergunta o nome, sugerindo o do próprio arquivo. Para dar um nome fixo, crie `.janus.toml` na raiz da pasta de modelos:
+
+```toml
+[names]
+"info.ai/ai-memory/*"     = ".ai-memory.toml"
+"info.ai/agents/*"        = "AGENTS.md"
+"info.dev/package.json.*" = "package.json"
+```
+
+O padrão casa o identificador inteiro, e `*` casa qualquer trecho sem `/`. As regras completas estão na [especificação](docs/specs/bootstrap.md).
+
+### Modelo de arquivo oculto
+
+Itens ocultos da pasta de modelos são ignorados, como no Nemo. Para um modelo que deve nascer com um nome que começa com ponto, guarde-o sem o ponto e dê o nome no manifesto, como `.ai-memory.toml` acima.
 
 ## Padrões
 
