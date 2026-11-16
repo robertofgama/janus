@@ -20,6 +20,10 @@ func optionValue(args []string, option string) string {
 	return args[i+1]
 }
 
+// guardOptions são as opções que o seletor e o campo de nome precisam receber para anular
+// as do usuário que mudariam a saída ou fariam o fzf sair sem perguntar (NFR-TUI-02).
+var guardOptions = []string{"--no-multi", "--no-expect", "--no-exit-0", "--no-select-1", "--no-read0", "--no-print0"}
+
 func TestFzfSelector(t *testing.T) {
 	t.Run("sends one id per line and returns the choice (FR-TUI-10)", func(t *testing.T) {
 		fake := testfixture.FakeProgram(t, "fzf", testfixture.Reply{Stdout: "b c\n"})
@@ -61,7 +65,7 @@ func TestFzfSelector(t *testing.T) {
 			t.Fatal(err)
 		}
 		args := fake.Calls(t)[0].Args
-		for _, option := range []string{"--no-multi", "--no-print-query", "--no-expect"} {
+		for _, option := range append([]string{"--no-print-query"}, guardOptions...) {
 			if !slices.Contains(args, option) {
 				t.Errorf("missing %s in %q", option, args)
 			}
@@ -114,6 +118,22 @@ func TestFzfPrompt(t *testing.T) {
 		}
 		if call.Stdin != "" {
 			t.Errorf("the list is %q, want empty", call.Stdin)
+		}
+	})
+
+	// Regressão: com --exit-0 no FZF_DEFAULT_OPTS, o fzf com a lista vazia sai na hora com o
+	// valor inicial. O arquivo nascia sem confirmação, e um destino existente reabria o
+	// campo sem fim.
+	t.Run("overrides the user options that change the output (NFR-TUI-02)", func(t *testing.T) {
+		fake := testfixture.FakeProgram(t, "fzf", testfixture.Reply{Stdout: "x\n", Code: 1})
+		if _, err := (FzfPrompt{Stderr: &bytes.Buffer{}}).Ask("inicial", ""); err != nil {
+			t.Fatal(err)
+		}
+		args := fake.Calls(t)[0].Args
+		for _, option := range guardOptions {
+			if !slices.Contains(args, option) {
+				t.Errorf("missing %s in %q", option, args)
+			}
 		}
 	})
 

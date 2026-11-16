@@ -4,6 +4,7 @@ import (
 	"errors"
 	"io"
 	"os/exec"
+	"slices"
 	"strings"
 
 	"gitlab.com/rg-dev/janus/internal/failure"
@@ -30,19 +31,24 @@ func (s FzfSelector) Select(ids []string) (string, error) {
 	return id, nil
 }
 
-// selectorArgs monta as opções do seletor. Elas vêm depois das do FZF_DEFAULT_OPTS e
-// prevalecem, então o tema do usuário fica e o contrato não muda.
+// guardArgs anulam as opções do FZF_DEFAULT_OPTS que mudariam a saída ou fariam o fzf sair
+// sem perguntar (NFR-TUI-02). Vêm depois das do usuário e prevalecem, então o tema e o
+// layout dele ficam e o contrato não muda. Sem --no-exit-0, um --exit-0 do usuário faz o
+// campo de nome, que tem a lista vazia, sair na hora com o valor inicial: o arquivo nasce
+// sem confirmação, e um destino existente reabre o campo sem fim.
+var guardArgs = []string{"--no-multi", "--no-expect", "--no-exit-0", "--no-select-1", "--no-read0", "--no-print0"}
+
+// selectorArgs monta as opções do seletor.
 func selectorArgs(executable string) []string {
-	return []string{
-		// Anulam opções do usuário que mudariam a saída (NFR-TUI-02).
-		"--no-multi", "--no-print-query", "--no-expect",
+	return append(slices.Clone(guardArgs),
+		"--no-print-query",
 		// A prévia roda com sh, e não com o $SHELL do usuário: o fish tem outras regras de
 		// aspas, e o {} do fzf sai citado para sh (NFR-TUI-01). O identificador nunca é
 		// juntado ao caminho aqui: quem o transforma em arquivo é o subcomando (DE-12).
 		"--with-shell", "sh -c",
-		"--preview", shellQuote(executable) + " " + PreviewCommand + " {}",
-		"--prompt=" + messages.SelectorLabel,
-	}
+		"--preview", shellQuote(executable)+" "+PreviewCommand+" {}",
+		"--prompt="+messages.SelectorLabel,
+	)
 }
 
 // FzfPrompt é o campo de nome: o fzf com a lista vazia (DE-17).
@@ -66,16 +72,16 @@ func (p FzfPrompt) Ask(initial, warning string) (string, error) {
 }
 
 func promptArgs(initial, warning string) []string {
-	args := []string{
-		"--no-multi", "--no-expect", "--print-query",
-		"--query=" + initial,
-		"--prompt=" + messages.NameLabel,
+	args := append(slices.Clone(guardArgs),
+		"--print-query",
+		"--query="+initial,
+		"--prompt="+messages.NameLabel,
 		// Na configuração padrão, Ctrl-D só cancela com o campo vazio; a spec pede que
 		// cancele sempre (DE-17).
 		"--bind=ctrl-d:abort",
 		"--info=hidden",
 		"--height=~6",
-	}
+	)
 	if warning != "" {
 		args = append(args, "--header="+warning)
 	}
