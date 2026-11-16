@@ -37,6 +37,8 @@ func runCommand(name string, args []string, sys System) error {
 	switch name {
 	case "list":
 		return runList(args, sys)
+	case "new":
+		return runNew(args, sys)
 	case interactive.PreviewCommand:
 		return runPreview(args, sys)
 	}
