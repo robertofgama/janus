@@ -33,7 +33,8 @@ type Deps struct {
 }
 
 // Run escolhe um modelo, cria o arquivo na pasta atual e devolve o caminho criado. As
-// verificações seguem a ordem do contrato: 2, 3, 4, 5 e 9 (FR-TUI-02).
+// verificações seguem a ordem do contrato: 2, 3, 4, 5, 9 e 10 (FR-TUI-02). O 10, que
+// inclui a pasta de modelos (FR-CORE-24), vem antes de abrir o seletor.
 func Run(d Deps) (string, error) {
 	if !d.IsTerminal {
 		return "", &failure.UsageError{Problem: failure.NoTerminal}
@@ -56,7 +57,7 @@ func Run(d Deps) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	destDir, err := core.DestinationDir(cwd)
+	destDir, err := core.DestinationDir(cwd, cat.Dir)
 	if err != nil {
 		return "", err
 	}

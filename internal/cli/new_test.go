@@ -107,6 +107,23 @@ func TestNew(t *testing.T) {
 		run(t, "new", react, "--dir=").wantFailure(t, 10)
 	})
 
+	t.Run("fails with 10 when the destination dir is inside the templates dir (FR-CORE-24)", func(t *testing.T) {
+		templates, _ := setup(t)
+		link := filepath.Join(t.TempDir(), "Modelos")
+		if err := os.Symlink(templates, link); err != nil {
+			t.Fatal(err)
+		}
+		before := testfixture.Snapshot(t, templates)
+		for _, dir := range []string{templates, filepath.Join(templates, "info.ai"), link} {
+			run(t, "new", react, "--dir", dir).wantFailure(t, 10, dir, templates)
+		}
+		t.Chdir(filepath.Join(templates, "info.dev"))
+		run(t, "new", react).wantFailure(t, 10, templates)
+		if after := testfixture.Snapshot(t, templates); after != before {
+			t.Error("the templates dir changed")
+		}
+	})
+
 	t.Run("fails with 5 on an unknown id (FR-CLI-10)", func(t *testing.T) {
 		setup(t)
 		run(t, "new", "nao/existe").wantFailure(t, 5, "nao/existe")
@@ -170,7 +187,9 @@ func TestNew(t *testing.T) {
 
 		testfixture.Write(t, templates, ".janus.toml", testfixture.Manifest, 0o644)
 		run(t, "new", "nao/existe", "--dir", "/caminho/inexistente").wantFailure(t, 5, "nao/existe")
+		run(t, "new", "nao/existe", "--dir", templates).wantFailure(t, 5, "nao/existe")
 		run(t, "new", contestacao, "--dir", "/caminho/inexistente").wantFailure(t, 10, "/caminho/inexistente")
+		run(t, "new", contestacao, "--dir", templates).wantFailure(t, 10, templates)
 
 		testfixture.Write(t, dest, "a", "", 0o644)
 		run(t, "new", contestacao, "--name", "a/b").wantFailure(t, 7, "a/b")

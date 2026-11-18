@@ -59,7 +59,7 @@ func Describe(err error) string {
 	case errors.As(err, &notFound):
 		return fmt.Sprintf("modelo não encontrado: %q. Veja os modelos com janus list.", notFound.ID)
 	case errors.As(err, &destDir):
-		return fmt.Sprintf("pasta de destino não encontrada: %q não existe ou não é uma pasta.", destDir.Dir)
+		return describeDestinationDir(destDir)
 	case errors.As(err, &required):
 		return fmt.Sprintf("o modelo %q pede um nome: informe --name.", required.ID)
 	case errors.As(err, &invalid):
@@ -76,6 +76,13 @@ func Describe(err error) string {
 		return fmt.Sprintf("o %s terminou com o código %d.", program.Program, program.Code)
 	}
 	return fmt.Sprintf("erro inesperado: %v", err)
+}
+
+func describeDestinationDir(e *core.DestinationDirError) string {
+	if e.Reason == core.DestInsideTemplates {
+		return fmt.Sprintf("pasta de destino recusada: %q é a pasta de modelos %s ou fica dentro dela. O Janus não escreve na pasta de modelos; use outra pasta.", e.Dir, e.TemplatesDir)
+	}
+	return fmt.Sprintf("pasta de destino não encontrada: %q não existe ou não é uma pasta.", e.Dir)
 }
 
 func describeTemplatesDir(e *core.TemplatesDirError) string {

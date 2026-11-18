@@ -81,9 +81,9 @@ O que o núcleo (`internal/core`) deve atender: descobrir a pasta de modelos, li
   - *Critério:* com `umask` 077, `Empty Bash` (755) cria um arquivo 755 (cenário 08), e um modelo 640 cria um arquivo 640.
 - **FR-CORE-22** ✅ — **Uma cópia que falha no meio não deixa arquivo.** O arquivo parcial é removido, e o erro devolvido não é de nenhum dos tipos com código próprio. (registrada em 2026-11-16; atendido em 2026-11-16)
   - *Critério:* com uma falha de leitura simulada no meio da cópia, a pasta de destino fica como estava.
-- **FR-CORE-24** ⬜ — **A pasta de destino nunca fica dentro da pasta de modelos.** Nem a própria pasta de modelos nem uma subpasta dela, comparando os caminhos reais, com os links resolvidos; o erro é o de pasta de destino, citando o caminho ([[decisions#DE-23 — A pasta de destino nunca fica dentro da pasta de modelos|DE-23]]). (registrada em 2026-11-16)
+- **FR-CORE-24** ✅ — **A pasta de destino nunca fica dentro da pasta de modelos.** Nem a própria pasta de modelos nem uma subpasta dela, comparando os caminhos reais, com os links resolvidos; o erro é o de pasta de destino, citando o caminho ([[decisions#DE-23 — A pasta de destino nunca fica dentro da pasta de modelos|DE-23]]). (registrada em 2026-11-16; atendido em 2026-11-18)
   - *Critério:* `new` com `--dir` apontando para a pasta de modelos, para uma subpasta dela ou para um link que leva a ela dá código 10, e nada é criado; o modo interativo rodado dentro dela dá código 10 sem abrir o seletor.
-  - *Nota:* muda a ordem do modo interativo para 2, 3, 4, 5, 9, 10; o critério de FR-TUI-02 ganha o caso do 10 junto com a implementação, em [[roadmap|RM-01.02]].
+  - *Nota:* a ordem do modo interativo passou a 2, 3, 4, 5, 9 e 10 ([[tui|FR-TUI-02]]). A verificação mora em `DestinationDir` ([[decisions#DE-26 — A recusa da pasta de modelos mora em DestinationDir|DE-26]]).
 
 ### Prévia
 

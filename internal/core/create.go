@@ -9,13 +9,27 @@ import (
 	"path/filepath"
 )
 
-// DestinationDirError é a pasta de destino inexistente ou que não é pasta (código 10).
+// DestinationDirReason diz por que a pasta de destino foi recusada.
+type DestinationDirReason int
+
+const (
+	DestNotDir          DestinationDirReason = iota + 1 // inexistente ou que não é pasta
+	DestInsideTemplates                                 // a pasta de modelos ou uma pasta dentro dela (DE-23)
+)
+
+// DestinationDirError é a pasta de destino recusada (código 10): inexistente, que não é
+// pasta, ou a pasta de modelos e o que fica dentro dela.
 type DestinationDirError struct {
-	Dir string // a pasta como foi informada
-	Err error
+	Dir          string // a pasta como foi informada
+	Reason       DestinationDirReason
+	TemplatesDir string // a pasta de modelos, só em DestInsideTemplates
+	Err          error
 }
 
 func (e *DestinationDirError) Error() string {
+	if e.Reason == DestInsideTemplates {
+		return fmt.Sprintf("destination dir %q is inside the templates dir %q", e.Dir, e.TemplatesDir)
+	}
 	return fmt.Sprintf("destination dir %q not found", e.Dir)
 }
 
@@ -30,25 +44,61 @@ func (e *DestinationExistsError) Error() string {
 	return fmt.Sprintf("destination %s already exists", e.Path)
 }
 
-// DestinationDir confere a pasta de destino e devolve o caminho absoluto dela. Um link
-// para pasta é aceito (FR-CORE-18). O caminho vazio é recusado antes do filepath.Abs, que
-// o trataria como a pasta atual.
-func DestinationDir(dir string) (string, error) {
+// DestinationDir confere a pasta de destino e devolve o caminho absoluto dela, sem resolver
+// os links, para o caminho impresso ser o que o usuário vê. Um link para pasta é aceito
+// (FR-CORE-18). O caminho vazio é recusado antes do filepath.Abs, que o trataria como a
+// pasta atual. A pasta de modelos e o que fica dentro dela são recusados (FR-CORE-24): a
+// verificação mora aqui porque `new` e o modo interativo já passam por esta função, cada
+// um no ponto que a ordem do contrato pede (DE-26).
+func DestinationDir(dir, templatesDir string) (string, error) {
+	notDir := func(err error) error {
+		return &DestinationDirError{Dir: dir, Reason: DestNotDir, Err: err}
+	}
 	if dir == "" {
-		return "", &DestinationDirError{Dir: dir}
+		return "", notDir(nil)
 	}
 	abs, err := filepath.Abs(dir)
 	if err != nil {
-		return "", &DestinationDirError{Dir: dir, Err: err}
+		return "", notDir(err)
 	}
 	info, err := os.Stat(abs)
 	if err != nil {
-		return "", &DestinationDirError{Dir: dir, Err: err}
+		return "", notDir(err)
 	}
 	if !info.IsDir() {
-		return "", &DestinationDirError{Dir: dir}
+		return "", notDir(nil)
+	}
+	resolved, err := filepath.EvalSymlinks(abs)
+	if err != nil {
+		return "", notDir(err)
+	}
+	inside, err := within(resolved, templatesDir)
+	if err != nil {
+		return "", err
+	}
+	if inside {
+		return "", &DestinationDirError{Dir: dir, Reason: DestInsideTemplates, TemplatesDir: templatesDir}
 	}
 	return abs, nil
+}
+
+// within diz se realDir, um caminho já sem links, é root ou fica dentro dela. root é
+// absoluta, como sai de FindTemplatesDir, e os links dela são resolvidos porque ~/Modelos
+// costuma ser um link (DE-23). O filepath.Rel com o filepath.IsLocal evita o falso positivo
+// da comparação por prefixo de texto, que acharia Modelos-antigo dentro de Modelos. Uma
+// montagem com mount --bind escapa desta comparação; os.SameFile subindo até a raiz pegaria
+// esse caso, mas custa um Stat por nível e foi rejeitado (DE-26). Uma falha ao resolver
+// root, que já foi validada na descoberta, sai como erro inesperado.
+func within(realDir, root string) (bool, error) {
+	realRoot, err := filepath.EvalSymlinks(root)
+	if err != nil {
+		return false, err
+	}
+	rel, err := filepath.Rel(realRoot, realDir)
+	if err != nil {
+		return false, err
+	}
+	return filepath.IsLocal(rel), nil
 }
 
 // copyContent copia o conteúdo do modelo. É variável só para o teste simular uma falha

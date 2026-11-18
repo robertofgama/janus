@@ -28,26 +28,71 @@ func TestDestinationDir(t *testing.T) {
 			t.Fatal(err)
 		}
 		t.Chdir(parent)
-		if got, err := DestinationDir("sub"); err != nil || got != filepath.Join(parent, "sub") {
+		if got, err := DestinationDir("sub", t.TempDir()); err != nil || got != filepath.Join(parent, "sub") {
 			t.Errorf("got %q, %v", got, err)
 		}
 	})
 
-	t.Run("accepts a link to a dir (FR-CORE-18)", func(t *testing.T) {
+	t.Run("accepts a link to a dir and returns it unresolved (FR-CORE-18, DE-26)", func(t *testing.T) {
 		link := filepath.Join(t.TempDir(), "link")
 		symlink(t, t.TempDir(), link)
-		if _, err := DestinationDir(link); err != nil {
-			t.Error(err)
+		if got, err := DestinationDir(link, t.TempDir()); err != nil || got != link {
+			t.Errorf("got %q, %v", got, err)
 		}
 	})
 
 	t.Run("rejects what is not a dir (FR-CORE-18)", func(t *testing.T) {
 		file := testfixture.Write(t, t.TempDir(), "arquivo", "", 0o644)
 		for _, dir := range []string{"/caminho/inexistente", file, ""} {
-			_, err := DestinationDir(dir)
+			_, err := DestinationDir(dir, t.TempDir())
 			var e *DestinationDirError
-			if !errors.As(err, &e) || e.Dir != dir {
+			if !errors.As(err, &e) || e.Dir != dir || e.Reason != DestNotDir {
 				t.Errorf("DestinationDir(%q) = %v", dir, err)
+			}
+		}
+	})
+
+	t.Run("rejects the templates dir and what is inside it (FR-CORE-24)", func(t *testing.T) {
+		base := t.TempDir()
+		templates := filepath.Join(base, "modelos")
+		testfixture.Write(t, templates, "sub/x", "", 0o644)
+		testfixture.Write(t, templates, ".git/config", "", 0o644)
+		testfixture.Write(t, templates, "..foo/x", "", 0o644)
+		// Como o ~/Modelos do autor: a pasta de modelos é um link para a pasta real.
+		link := filepath.Join(base, "Modelos")
+		symlink(t, templates, link)
+		toSub := filepath.Join(base, "atalho")
+		symlink(t, filepath.Join(templates, "sub"), toSub)
+		cases := []struct{ dir, templatesDir string }{
+			{templates, templates},
+			{filepath.Join(templates, "sub"), templates},
+			{filepath.Join(templates, ".git"), templates},
+			{filepath.Join(templates, "..foo"), templates},
+			{toSub, templates},
+			{link, templates},
+			{filepath.Join(templates, "sub"), link},
+			{filepath.Join(link, "sub"), link},
+		}
+		for _, c := range cases {
+			_, err := DestinationDir(c.dir, c.templatesDir)
+			var e *DestinationDirError
+			if !errors.As(err, &e) || e.Reason != DestInsideTemplates || e.Dir != c.dir || e.TemplatesDir != c.templatesDir {
+				t.Errorf("DestinationDir(%q, %q) = %v", c.dir, c.templatesDir, err)
+			}
+		}
+	})
+
+	t.Run("accepts the parent and a sibling with the same prefix (FR-CORE-24)", func(t *testing.T) {
+		base := t.TempDir()
+		templates := filepath.Join(base, "Modelos")
+		testfixture.Write(t, templates, "x", "", 0o644)
+		sibling := filepath.Join(base, "Modelos-antigo")
+		if err := os.Mkdir(sibling, 0o755); err != nil {
+			t.Fatal(err)
+		}
+		for _, dir := range []string{base, sibling} {
+			if got, err := DestinationDir(dir, templates); err != nil || got != dir {
+				t.Errorf("DestinationDir(%q) = %q, %v", dir, got, err)
 			}
 		}
 	})

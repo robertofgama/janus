@@ -23,7 +23,7 @@ Códigos de saída:
   1  erro inesperado               7  nome inválido
   2  uso incorreto                 8  destino já existe
   3  pasta de modelos ausente      9  fzf ausente
-  4  manifesto inválido           10  pasta de destino ausente
+  4  manifesto inválido           10  pasta de destino inválida
   5  modelo não encontrado       130  cancelado
 `
 

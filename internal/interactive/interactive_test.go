@@ -196,7 +196,28 @@ func TestRun(t *testing.T) {
 		}
 	})
 
-	t.Run("checks in the order 2, 3, 4, 5, 9 (FR-TUI-02)", func(t *testing.T) {
+	t.Run("fails with the destination dir error inside the templates dir, without opening the selector (FR-CORE-24)", func(t *testing.T) {
+		sel := &fakeSelector{pick: react}
+		d, _ := setup(t, sel, &fakePrompt{})
+		templates := os.Getenv("XDG_TEMPLATES_DIR")
+		before := testfixture.Snapshot(t, templates)
+		for _, cwd := range []string{templates, filepath.Join(templates, "info.ai", "agents")} {
+			d.Getwd = func() (string, error) { return cwd, nil }
+			_, err := Run(d)
+			var e *core.DestinationDirError
+			if !errors.As(err, &e) || e.Reason != core.DestInsideTemplates || e.Dir != cwd || e.TemplatesDir != templates {
+				t.Errorf("cwd %q: got %v", cwd, err)
+			}
+		}
+		if sel.ids != nil {
+			t.Error("the selector was opened")
+		}
+		if after := testfixture.Snapshot(t, templates); after != before {
+			t.Error("the templates dir changed")
+		}
+	})
+
+	t.Run("checks in the order 2, 3, 4, 5, 9, 10 (FR-TUI-02)", func(t *testing.T) {
 		d, _ := setup(t, &fakeSelector{pick: react}, &fakePrompt{})
 		d.LookPath = func(string) (string, error) { return "", exec.ErrNotFound }
 
@@ -217,6 +238,12 @@ func TestRun(t *testing.T) {
 		testfixture.Write(t, empty, core.ManifestFile, "", 0o644)
 		if _, err := Run(d); !errors.As(err, new(*failure.NoTemplatesError)) {
 			t.Errorf("no templates and no fzf: got %v", err)
+		}
+
+		templates := testfixture.Use(t)
+		d.Getwd = func() (string, error) { return templates, nil }
+		if _, err := Run(d); !errors.As(err, new(*failure.MissingProgramError)) {
+			t.Errorf("no fzf inside the templates dir: got %v", err)
 		}
 	})
 }

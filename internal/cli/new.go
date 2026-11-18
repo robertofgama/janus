@@ -39,7 +39,7 @@ func runNew(args []string, sys System) error {
 			return err
 		}
 	}
-	destDir, err := core.DestinationDir(dir)
+	destDir, err := core.DestinationDir(dir, cat.Dir)
 	if err != nil {
 		return err
 	}

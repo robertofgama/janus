@@ -18,8 +18,9 @@ O que o modo interativo (`internal/interactive`) deve atender: o comando `janus`
 
 - **FR-TUI-01** ✅ — **O modo interativo exige um terminal.** Se a entrada padrão ou a saída de erro não forem um terminal, ele falha com o código 2 e sugere `janus new`. A saída padrão pode estar redirecionada. (registrada em 2026-11-16; atendido em 2026-11-16)
   - *Critério:* entrada padrão vinda de um arquivo dá código 2 e uma mensagem que cita `janus new`; a mesma execução com a saída padrão num arquivo e os outros dois num terminal segue adiante.
-- **FR-TUI-02** ✅ — **A ordem de verificação é 2, 3, 4, 5 e 9.** Depois vem o laço de escolha e nome. (registrada em 2026-11-16; atendido em 2026-11-16)
-  - *Critério:* sem terminal e com pasta de modelos ruim dá 2; pasta de modelos ruim com manifesto inválido dá 3; manifesto inválido com pasta vazia dá 4; pasta sem modelos e sem `fzf` no `PATH` dá 5; sem `fzf` no `PATH` dá 9 (cenário 22).
+- **FR-TUI-02** ✅ — **A ordem de verificação é 2, 3, 4, 5, 9 e 10.** Depois vem o laço de escolha e nome. (registrada em 2026-11-16; atendido em 2026-11-16)
+  - *Critério:* sem terminal e com pasta de modelos ruim dá 2; pasta de modelos ruim com manifesto inválido dá 3; manifesto inválido com pasta vazia dá 4; pasta sem modelos e sem `fzf` no `PATH` dá 5; sem `fzf` no `PATH` dá 9 (cenário 22), também dentro da pasta de modelos; dentro da pasta de modelos dá 10 sem abrir o seletor.
+  - *Nota:* o 10 entrou em 2026-11-18, com [[core|FR-CORE-24]], em [[roadmap|RM-01.02]].
 - **FR-TUI-03** ✅ — **Pasta sem nenhum modelo encerra com o código 5.** Com um aviso que cita a pasta. (registrada em 2026-11-16; atendido em 2026-11-16)
   - *Critério:* pasta de modelos vazia, ou só com itens ocultos, dá código 5 sem abrir o seletor.
 
