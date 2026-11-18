@@ -63,7 +63,7 @@ O projeto segue os padrões da Darth Gama Software. O essencial, para quem não 
 
 - **Idioma**: identificadores, nomes de arquivo e pasta, branches e mensagens de commit em inglês. Comentários no código, mensagens ao usuário e conteúdo de `docs/` e do README em português do Brasil. Nomes de arquivo em `docs/` em inglês.
 - **Commits**: `<gitmoji> tipo(escopo): descrição`, em inglês, imperativo, minúsculas, sem ponto final. Sem co-autoria de IA. Sem push sem pedido expresso. Os escopos usados neste projeto estão em [[decisions#DE-14 — Escopos de commit dentro do vocabulário da casa|DE-14]].
-- **Branches**: `main` (estável), `dev` (integração), `feat/<slug>` e `fix/<slug>`. Cada branch é um worktree irmão em `~/Projetos/dev/janus/`, trocando `/` por `_` no nome da pasta.
+- **Branches**: `main` (estável), `dev` (integração), `feat/<slug>` e `fix/<slug>`. Cada branch é um worktree irmão em `~/Projetos/dev/janus/`, trocando `/` por `_` no nome da pasta. A exceção são as entregas do roadmap, em `feat/rm-NN.NN_<slug>`, no worktree que o herdr cria ([[decisions#DE-25 — A branch de entrega do roadmap leva o ID e mora no worktree do herdr|DE-25]]).
 - **Documentação**: `docs/specs/`, `docs/plans/`, `docs/requirements/`, `docs/reports/`, `docs/decisions.md`, `docs/technical-debts.md` e `docs/roadmap.md`, em Markdown estilo Obsidian com frontmatter.
 - **Dívida técnica**: tudo que ficar para depois vira uma `DT` antes de a tarefa terminar.
 - **Testes**: moram ao lado do código que testam. Por regra do autor, a correção de um bug começa por um teste de regressão que falha antes da correção.
@@ -356,6 +356,7 @@ desc = "Novo arquivo a partir de modelo"
 
 - O comando roda na pasta em que o yazi está.
 - `prepend_keymap` dá precedência sobre o mapa de teclas padrão. A tecla é `c` seguida de `m` ([[decisions#DE-24 — O atalho do yazi é c seguido de m|DE-24]]).
+- O trecho, pronto para copiar, e as instruções de instalação estão em `integrations/yazi/`. Os requisitos estão em [[yazi|requisitos do yazi]].
 - Na máquina do autor, o arquivo deve nascer como um pacote novo em `~/dotfiles/yazi/.config/yazi/keymap.toml`.
 
 ### Neovim: comando `:Janus [pasta]`
@@ -442,6 +443,8 @@ info.dev/react; script; simple.html
 3. Acionar de novo e escolher o mesmo modelo. O campo de nome abre avisando do conflito; cancelar devolve ao yazi sem criar nada.
 4. Acionar e escolher um modelo `ask`, confirmando um nome. O arquivo aparece com a extensão do modelo.
 5. Tornar o manifesto inválido de propósito e acionar. A mensagem de erro fica na tela até o `Enter`.
+6. Abrir o yazi dentro da pasta de modelos e acionar o atalho. A mensagem do código 10 fica na tela até o `Enter`, e nada é criado.
+7. Teclar `c`. O menu mostra a entrada do Janus junto das de copiar caminhos; `Esc` fecha o menu.
 
 ### Roteiro de verificação manual: neovim
 
@@ -573,3 +576,4 @@ Documentação consultada: [atalhos e comando `shell` do yazi](https://yazi-rs.g
 - **2026-11-09**: na escrita do `AGENTS.md`, o glossário ganhou a coluna Inglês e dez termos que a spec já usava, e saiu desta spec para um arquivo próprio, [[glossary]] ([[decisions#DE-15 — O glossário fixa os nomes em inglês; modelo é template|DE-15]]). Com isso, "destino" passou a ser só o arquivo a criar, e duas frases de `janus new` que usavam a palavra para a pasta passaram a dizer "pasta de destino". Sem mudança de comportamento.
 - **2026-11-16**: no planejamento de [[roadmap|RM-01.01]], as escolhas em aberto viraram as decisões de [[decisions#DE-16 — O módulo Go é gitlab.com/rg-dev/janus|DE-16]] a [[decisions#DE-22 — A versão vem do que o Go grava no binário|DE-22]], e o estudo das ferramentas parecidas resolveu [[technical-debts|DT-04]]. Mudanças nesta spec: a leitura do `user-dirs.dirs` ganhou as regras da GLib (DE-20); `janus new` passou a dizer que o identificador é procurado na listagem; as opções podem vir antes ou depois do identificador (DE-19); a estrutura ganhou `internal/messages/` e `internal/failure/` (DE-21) e `internal/testfixture/`. O contrato não mudou: só ficaram definidos casos que a spec deixava em aberto.
 - **2026-11-16**: depois de [[roadmap|RM-01.01]], o autor executou o atalho do yazi ([[technical-debts|DT-03]], resolvida) e fixou a tecla em [[decisions#DE-24 — O atalho do yazi é c seguido de m|DE-24]]. Mudança de contrato em [[decisions#DE-23 — A pasta de destino nunca fica dentro da pasta de modelos|DE-23]]: a pasta de destino dentro da pasta de modelos passa a dar o código 10, em `janus new` e no modo interativo, que ganha o 10 na ordem de verificação. A implementação fica para [[roadmap|RM-01.02]] ([[technical-debts|DT-13]]).
+- **2026-11-18**: no desenho de [[roadmap|RM-01.02]], a recusa da pasta de modelos ficou em `DestinationDir` ([[decisions#DE-26 — A recusa da pasta de modelos mora em DestinationDir|DE-26]]), e as entregas do roadmap passaram a usar a branch `feat/rm-NN.NN_<slug>` e o worktree do herdr ([[decisions#DE-25 — A branch de entrega do roadmap leva o ID e mora no worktree do herdr|DE-25]], que resolve [[technical-debts|DT-11]]). Os requisitos do yazi ganharam arquivo próprio, [[yazi|requisitos do yazi]], e o roteiro manual do yazi ganhou os passos 6, da pasta de modelos, e 7, do menu do `c`. O contrato não mudou.

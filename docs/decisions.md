@@ -8,7 +8,7 @@ tags:
 
 # Decisões
 
-Decisões do Janus, cada uma com o motivo e as alternativas rejeitadas. As de DE-01 a DE-12 foram tomadas na sessão de desenho de 2026-11-09; DE-13 e DE-14, na migração para este repositório, e DE-15, na escrita do `AGENTS.md`, no mesmo dia. As de DE-16 a DE-22 saíram do planejamento de [[roadmap|RM-01.01]], em 2026-11-16. O desenho completo está em [[bootstrap]].
+Decisões do Janus, cada uma com o motivo e as alternativas rejeitadas. As de DE-01 a DE-12 foram tomadas na sessão de desenho de 2026-11-09; DE-13 e DE-14, na migração para este repositório, e DE-15, na escrita do `AGENTS.md`, no mesmo dia. As de DE-16 a DE-22 saíram do planejamento de [[roadmap|RM-01.01]], em 2026-11-16, e DE-23 e DE-24, da revisão que fechou essa entrega, no mesmo dia. DE-25 e DE-26 saíram do desenho de [[roadmap|RM-01.02]], em 2026-11-18. O desenho completo está em [[bootstrap]].
 
 ## Registro
 
@@ -155,3 +155,15 @@ Decisões do Janus, cada uma com o motivo e as alternativas rejeitadas. As de DE
 - **Decisão:** o trecho do `keymap.toml` do yazi usa `on = ["c", "m"]` com `run = 'shell "janus --hold" --block'`, em `[[mgr.prepend_keymap]]`.
 - **Por quê:** o autor executou os cinco passos do roteiro manual na yazi 26.9.1 em 2026-11-16, com essa tecla, e aprovou ([[technical-debts|DT-03]]). A leitura é "criar a partir de modelo", e o `prepend_keymap` dá precedência sobre o mapa padrão do yazi, em que `c` abre as ações de copiar caminhos.
 - **Rejeitadas:** manter a tecla como sugestão até a [[roadmap|RM-01.02]], o que deixaria em aberto uma escolha já testada; outra combinação, que ninguém pediu.
+
+### DE-25 — A branch de entrega do roadmap leva o ID e mora no worktree do herdr
+
+- **Decisão:** a branch de uma entrega do roadmap se chama `feat/rm-NN.NN_<slug>`, com o ID da entrega antes do `_` e o slug em `kebab-case` depois, e o worktree dela é o que o herdr cria em `~/.herdr/worktrees/janus/`. O resto do trabalho segue o padrão da casa: `feat/<slug>` e `fix/<slug>`, com o worktree irmão em `~/Projetos/dev/janus/`. Vale só para o Janus; o padrão da casa não muda.
+- **Por quê:** as duas primeiras entregas nasceram assim, pelo herdr, que o autor usa para abrir as sessões de trabalho ([[technical-debts|DT-11]]). O ID na branch liga o histórico à entrega sem precisar abrir o roadmap. Mover o worktree obrigaria a trocar de pasta no meio da sessão e quebraria o vínculo com o herdr.
+- **Rejeitadas:** seguir o padrão da casa também nas entregas, renomeando a branch e movendo o worktree para `~/Projetos/dev/janus/feat_<slug>`, o que pediria a troca de pasta no meio da sessão; adiar de novo a [[technical-debts|DT-11]], o que deixaria cada branch nova repetindo a divergência sem regra. O erro de digitação de `feat/rm-01.02_yazy-integration` fica, porque a branch some depois do merge e renomeá-la pode confundir o herdr.
+
+### DE-26 — A recusa da pasta de modelos mora em DestinationDir
+
+- **Decisão:** `core.DestinationDir` recebe a pasta de modelos e, além de conferir que a pasta de destino existe e é pasta, recusa a pasta de modelos e o que fica dentro dela ([[#DE-23 — A pasta de destino nunca fica dentro da pasta de modelos|DE-23]]). A comparação resolve os links dos dois caminhos com `filepath.EvalSymlinks` e usa `filepath.Rel`: a pasta é recusada quando o resultado é `.` ou não sobe com `..`. O erro continua o `DestinationDirError`, com um campo `Reason` que separa "inexistente ou não é pasta" de "dentro da pasta de modelos" para a mensagem; o código de saída continua 10. O caminho devolvido continua o absoluto, sem os links resolvidos, para o caminho impresso ser o que o usuário vê.
+- **Por quê:** `new` e o modo interativo já passam por essa função, cada um no ponto que a ordem do contrato pede (no `new`, depois do 5 e antes do 6; no modo interativo, depois do 9 e antes do seletor). Assim a regra vale nos dois sem código novo nos chamadores, e a assinatura nova faz o compilador acusar qualquer chamador esquecido. O `filepath.Rel` evita o falso positivo da comparação por prefixo de texto, que recusaria `Modelos-antigo` com a pasta de modelos em `Modelos`.
+- **Rejeitadas:** uma função separada, chamada por cada frontend depois de `DestinationDir`, em que esquecer uma chamada quebraria [[core|NFR-CORE-01]] sem aviso do compilador; a verificação dentro de `core.Create`, que chega tarde: o modo interativo já teria aberto o seletor, e no `new` o 10 viria depois do 6 e do 7; comparar com `os.SameFile` subindo da pasta de destino até a raiz, que pegaria até uma montagem com `mount --bind`, mas foge da comparação de caminhos decidida na DE-23 e custa um `Stat` por nível, por um caso que ninguém usa.

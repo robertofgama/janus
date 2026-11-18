@@ -64,7 +64,7 @@ Só o núcleo conhece os modelos.
 
 ## Git
 
-- Branches: `main` (estável), `dev` (integração), `feat/<slug>` e `fix/<slug>`. Cada branch é um worktree irmão em `~/Projetos/dev/janus/`, com `/` trocado por `_`: `feat/x` mora em `~/Projetos/dev/janus/feat_x`, e `main` em `~/Projetos/dev/janus/janus`.
+- Branches: `main` (estável), `dev` (integração), `feat/<slug>` e `fix/<slug>`. Cada branch é um worktree irmão em `~/Projetos/dev/janus/`, com `/` trocado por `_`: `feat/x` mora em `~/Projetos/dev/janus/feat_x`, e `main` em `~/Projetos/dev/janus/janus`. A exceção é a entrega do roadmap (DE-25): a branch é `feat/rm-NN.NN_<slug>`, como `feat/rm-01.02_yazy-integration`, e o worktree é o que o herdr cria em `~/.herdr/worktrees/janus/`.
 - Commit em inglês, no imperativo, em minúsculas e sem ponto final, com o gitmoji colado ao tipo e os IDs entre parênteses no fim: `📝docs(plans): add the implementation plan (RM-01.01)`, `🐛fix(core): remove the partial file when the copy fails (DT-NN)`.
 - Um emoji por tipo, sem sinônimos: ✨feat, 🐛fix, 📝docs, 🧪test, ♻️refactor, 🔧chore, 🎨style, ⚡️perf, 📦️build, 👷ci, ⏪️revert, 🔥remove, 🔀merge, 🎉init.
 - Escopos (DE-14): `core` para todo o código Go, `specs` e `plans` para esses documentos, `deps` para dependências. Integrações e mudanças gerais vão sem escopo.
