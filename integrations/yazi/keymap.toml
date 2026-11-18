@@ -1,0 +1,9 @@
+# Atalho do Janus para o yazi: c seguido de m cria um arquivo a partir de um modelo, na
+# pasta em que o yazi está (DE-24). Copie o bloco abaixo para ~/.config/yazi/keymap.toml.
+#
+# --block esconde o yazi enquanto o janus roda, e --hold segura a mensagem de erro até o
+# Enter, porque o yazi volta à tela dele assim que o comando termina.
+[[mgr.prepend_keymap]]
+on   = ["c", "m"]
+run  = 'shell "janus --hold" --block'
+desc = "Novo arquivo a partir de modelo"
