@@ -32,6 +32,9 @@ Tudo o que ficou para depois ou precisa ser revisto no Janus.
 - **DT-15** ⬜ — **O aviso de destino existente pode ser cortado no campo de nome.** O aviso cita o caminho completo, e com uma pasta longa o `fzf` o corta na largura do terminal. O nome que colidiu continua visível no campo. Visto na conferência manual. (registrada em 2026-11-16)
   - *Rever quando:* incomodar no uso. Saída: citar só o nome no aviso do campo de nome e manter o caminho completo na mensagem de `janus new`.
   - *Ver também:* [[rm-01.01-manual-check]].
+- **DT-16** ⬜ — **O atalho do yazi não roda num terminal simulado pelo `tmux`.** Com o yazi 26.9.1 num `tmux` sem terminal de verdade, o `shell --block` falha com `Erro de entrada/saída (os error 5)` no log do yazi, e o `janus` não chega a rodar. O modo assíncrono, o `cd` e o menu do `c` funcionam. Por isso a conferência de [[roadmap|RM-01.02]] foi dividida: o `janus --hold` no `tmux`, e o yazi de verdade no terminal do autor. O cenário sem o `janus` no `PATH`, que conferiria o texto de "Problemas comuns" do `README.md` da integração, ficou sem rodar, e o texto continua com "provavelmente". (registrada em 2026-11-19)
+  - *Rever quando:* na próxima conferência do yazi, com uma versão nova dele ou uma mudança no atalho. Saídas possíveis: achar no código do yazi a chamada do modo `--block` que falha sem terminal, ou rodar o yazi num emulador de terminal de verdade, sem tela. O cenário sem o `janus` pode rodar no terminal do autor, em meio minuto.
+  - *Ver também:* [[rm-01.02-manual-check]].
 
 ## Finalizadas
 
