@@ -27,7 +27,7 @@ O que foi conferido e o que não foi:
 |---|---|
 | Versões e caminhos de [[#Ambiente de referência]] | Lidos na máquina do autor em 2026-11-09 |
 | [[#Inventário dos modelos]] | Lido na máquina do autor em 2026-11-09 |
-| Sintaxe do atalho do yazi (`mgr.prepend_keymap`, `shell --block`) | Executada pelo autor na yazi 26.9.1 em 2026-11-16, com os cinco passos do roteiro manual ([[technical-debts\|DT-03]], resolvida), e de novo em 2026-11-19, com os sete passos. Nessa conferência, o `janus --hold` e o menu do `c` rodaram num `tmux`; o yazi de verdade, no terminal do autor, com o arquivo entregue em `integrations/yazi/` instalado pelo dotfiles. O `shell --block` não roda no `tmux` ([[technical-debts\|DT-16]], [[rm-01.02-manual-check]]) |
+| Sintaxe do atalho do yazi (`mgr.prepend_keymap`, `shell --block`) | Executada pelo autor na yazi 26.9.1 em 2026-11-16, com os cinco passos do roteiro manual ([[technical-debts\|DT-03]], resolvida), e de novo em 2026-11-19, com os sete passos ([[rm-01.02-manual-check]]). Os passos 1 a 6 rodaram no terminal do autor, com o arquivo de `integrations/yazi/` instalado pelo dotfiles. O passo 7 e o `janus --hold` de cada passo rodaram num `tmux` automatizado, em que o `shell --block` não roda por falta de um terminal de verdade ([[technical-debts\|DT-16]]) |
 | O Nemo não mostra itens ocultos no menu de modelos | Confirmado pelo autor em 2026-11-09 para a pasta oculta `.git`; o manifesto, também oculto, segue a mesma regra ([[technical-debts\|DT-01]], resolvida) |
 | Bibliotecas e opções citadas em [[#Notas para o plano de implementação]] | As escolhidas foram conferidas na documentação em 2026-11-16: `BurntSushi/toml` 1.6.0 ([[decisions#DE-18 — O manifesto é lido com BurntSushi/toml\|DE-18]]) e as opções do `fzf` 0.74 usadas no campo de nome e na prévia ([[decisions#DE-17 — O campo de nome é o próprio fzf\|DE-17]]) |
 | Como a GLib lê o `user-dirs.dirs` | Código de `glib/gutilsprivate.c` lido em 2026-11-16 ([[decisions#DE-20 — O user-dirs.dirs é lido como a GLib lê\|DE-20]]) |
@@ -345,7 +345,7 @@ Toda falha escreve na saída de erro uma mensagem em português que cita o item 
 
 ### Yazi: atalho
 
-Em `~/.config/yazi/keymap.toml`. A forma `[[mgr.prepend_keymap]]` com `shell ... --block` foi conferida na documentação atual do yazi, e a versão instalada em 2026-11-09 é a 26.9.1. O trecho abaixo foi executado pelo autor em 2026-11-16, com os cinco passos do roteiro manual ([[technical-debts|DT-03]], resolvida).
+Em `~/.config/yazi/keymap.toml`. A forma `[[mgr.prepend_keymap]]` com `shell ... --block` foi conferida na documentação atual do yazi, e a versão instalada em 2026-11-09 é a 26.9.1. O trecho abaixo foi executado pelo autor em 2026-11-16, com os cinco passos do roteiro manual ([[technical-debts|DT-03]], resolvida), e de novo em 2026-11-19, no fechamento de [[roadmap|RM-01.02]] ([[rm-01.02-manual-check]]).
 
 ```toml
 [[mgr.prepend_keymap]]
@@ -357,7 +357,7 @@ desc = "Novo arquivo a partir de modelo"
 - O comando roda na pasta em que o yazi está.
 - `prepend_keymap` dá precedência sobre o mapa de teclas padrão. A tecla é `c` seguida de `m` ([[decisions#DE-24 — O atalho do yazi é c seguido de m|DE-24]]).
 - O trecho, pronto para copiar, e as instruções de instalação estão em `integrations/yazi/`. Os requisitos estão em [[yazi|requisitos do yazi]].
-- Na máquina do autor, o arquivo deve nascer como um pacote novo em `~/dotfiles/yazi/.config/yazi/keymap.toml`.
+- Na máquina do autor, o arquivo é o pacote `yazi` do dotfiles, em `~/dotfiles/yazi/.config/yazi/keymap.toml`: uma cópia de `integrations/yazi/keymap.toml`, criada em 2026-11-19 ([[rm-01.02-manual-check]]).
 
 ### Neovim: comando `:Janus [pasta]`
 
