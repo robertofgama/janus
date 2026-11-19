@@ -27,7 +27,7 @@ O que foi conferido e o que não foi:
 |---|---|
 | Versões e caminhos de [[#Ambiente de referência]] | Lidos na máquina do autor em 2026-11-09 |
 | [[#Inventário dos modelos]] | Lido na máquina do autor em 2026-11-09 |
-| Sintaxe do atalho do yazi (`mgr.prepend_keymap`, `shell --block`) | Executada pelo autor na yazi 26.9.1 em 2026-11-16, com os cinco passos do roteiro manual ([[technical-debts\|DT-03]], resolvida) |
+| Sintaxe do atalho do yazi (`mgr.prepend_keymap`, `shell --block`) | Executada pelo autor na yazi 26.9.1 em 2026-11-16, com os cinco passos do roteiro manual ([[technical-debts\|DT-03]], resolvida), e de novo em 2026-11-19, com os sete passos. Nessa conferência, o `janus --hold` e o menu do `c` rodaram num `tmux`; o yazi de verdade, no terminal do autor, com o arquivo entregue em `integrations/yazi/` instalado pelo dotfiles. O `shell --block` não roda no `tmux` ([[technical-debts\|DT-16]], [[rm-01.02-manual-check]]) |
 | O Nemo não mostra itens ocultos no menu de modelos | Confirmado pelo autor em 2026-11-09 para a pasta oculta `.git`; o manifesto, também oculto, segue a mesma regra ([[technical-debts\|DT-01]], resolvida) |
 | Bibliotecas e opções citadas em [[#Notas para o plano de implementação]] | As escolhidas foram conferidas na documentação em 2026-11-16: `BurntSushi/toml` 1.6.0 ([[decisions#DE-18 — O manifesto é lido com BurntSushi/toml\|DE-18]]) e as opções do `fzf` 0.74 usadas no campo de nome e na prévia ([[decisions#DE-17 — O campo de nome é o próprio fzf\|DE-17]]) |
 | Como a GLib lê o `user-dirs.dirs` | Código de `glib/gutilsprivate.c` lido em 2026-11-16 ([[decisions#DE-20 — O user-dirs.dirs é lido como a GLib lê\|DE-20]]) |

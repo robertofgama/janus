@@ -8,7 +8,7 @@ Ferramenta de linha de comando que leva o "Criar novo documento" do gerenciador 
 
 ## Estado
 
-Núcleo e terminal prontos ([RM-01.01](docs/roadmap.md)). As integrações com o yazi e o neovim são as próximas entregas.
+Núcleo, terminal e yazi prontos ([RM-01.01 e RM-01.02](docs/roadmap.md)). A integração com o neovim é a próxima entrega.
 
 ## Documentação
 
@@ -37,6 +37,10 @@ janus --help                   # ajuda, com os códigos de saída
 ```
 
 O modo interativo imprime só o caminho criado na saída padrão, então `nvim (janus)` funciona no fish.
+
+## Yazi
+
+Tecle `c` e depois `m` no yazi para criar um arquivo, a partir de um modelo, na pasta em que ele está. A instalação do atalho está em [integrations/yazi](integrations/yazi/README.md).
 
 ## Nomes fixos
 
