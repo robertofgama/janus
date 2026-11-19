@@ -87,6 +87,21 @@ func TestInteractiveMode(t *testing.T) {
 		}
 	})
 
+	t.Run("fails with 10 inside the templates dir and waits for Enter with --hold (FR-CORE-24, FR-TUI-13)", func(t *testing.T) {
+		templates, _ := setup(t)
+		testfixture.FakeProgram(t, "fzf", testfixture.Reply{Stdout: react + "\n"})
+		t.Chdir(filepath.Join(templates, "info.ai"))
+		before := testfixture.Snapshot(t, templates)
+		stdin := strings.NewReader("\n")
+		runWith(t, func(s *System) { s.Stdin = stdin }, "--hold").wantFailure(t, 10, templates)
+		if stdin.Len() != 0 {
+			t.Error("did not wait for the Enter")
+		}
+		if after := testfixture.Snapshot(t, templates); after != before {
+			t.Error("the templates dir changed")
+		}
+	})
+
 	t.Run("does not wait when canceled or without --hold (FR-TUI-13)", func(t *testing.T) {
 		templates, _ := setup(t)
 		testfixture.FakeProgram(t, "fzf", testfixture.Reply{Code: 130})

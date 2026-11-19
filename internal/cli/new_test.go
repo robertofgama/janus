@@ -119,6 +119,9 @@ func TestNew(t *testing.T) {
 		}
 		t.Chdir(filepath.Join(templates, "info.dev"))
 		run(t, "new", react).wantFailure(t, 10, templates)
+		for _, dir := range []string{".", ".."} {
+			run(t, "new", react, "--dir", dir).wantFailure(t, 10, templates)
+		}
 		if after := testfixture.Snapshot(t, templates); after != before {
 			t.Error("the templates dir changed")
 		}
