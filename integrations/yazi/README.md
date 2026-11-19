@@ -16,7 +16,7 @@ Atalho do [yazi](https://yazi-rs.github.io) que abre o modo interativo do Janus 
    go install ./cmd/janus
    ```
 
-   Ele vai para `~/go/bin`, ou para a pasta de `$GOBIN`, se ela estiver definida. Essa pasta precisa estar no `PATH`.
+   Ele vai para a pasta de `$GOBIN`, se ela estiver definida, ou para `$GOPATH/bin`, que por padrão é `~/go/bin`. Essa pasta precisa estar no `PATH`.
 
 2. Leve o bloco de [`keymap.toml`](keymap.toml) para `~/.config/yazi/keymap.toml`. Se o arquivo ainda não existe, copie-o inteiro:
 
@@ -25,7 +25,11 @@ Atalho do [yazi](https://yazi-rs.github.io) que abre o modo interativo do Janus 
    cp integrations/yazi/keymap.toml ~/.config/yazi/keymap.toml
    ```
 
-   Se ele já existe, acrescente o bloco `[[mgr.prepend_keymap]]` ao fim, sem apagar os outros.
+   Se ele já existe, acrescente o bloco `[[mgr.prepend_keymap]]` ao fim, sem apagar os outros. A exceção é o arquivo que já tem, dentro de `[mgr]`, um `prepend_keymap = [ … ]` em forma de lista: ali o bloco deixaria o TOML inválido, e a entrada vai como mais um item da lista:
+
+   ```toml
+   { on = ["c", "m"], run = 'shell "janus --hold" --block', desc = "Novo arquivo a partir de modelo" },
+   ```
 
 3. Feche e abra o yazi de novo, para ele ler o `keymap.toml`.
 
